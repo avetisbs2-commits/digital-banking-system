@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Bank System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1e8ed; border-radius: 6px; background: #fafbfc; }
+        h3 { margin-top: 0; color: #34495e; }
+        input, select { padding: 8px; margin: 5px 0; width: calc(100% - 18px); border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2980b9; }
+        .success { color: #27ae60; font-weight: bold; background: #e8f8f5; padding: 10px; border-radius: 4px; }
+        .error { color: #c0392b; font-weight: bold; background: #f9ebea; padding: 10px; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Digital Bank System</h1>
+
+    <!-- Уведомления об успехе или ошибке -->
+    <div th:if="${message}" class="success" th:text="${message}"></div>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <!-- 1. Open New Account -->
+    <div class="section">
+        <h3>1. Open New Account</h3>
+        <form action="/account/create" method="post">
+            <input type="text" name="ownerName" placeholder="Owner Name" required>
+            <input type="password" name="pinCode" placeholder="PIN-code (4 digits)" maxlength="4" required>
+            <input type="number" step="0.01" name="initialBalance" placeholder="Initial Balance" required>
+            <select name="currency">
+                <option value="AMD">AMD</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+            </select>
+            <button type="submit">Open Account</button>
+        </form>
+    </div>
+
+    <!-- 2. Deposit Money -->
+    <div class="section">
+        <h3>2. Deposit Money</h3>
+        <form action="/account/deposit" method="post">
+            <input type="text" name="accountNumber" placeholder="Account Number" required>
+            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+            <button type="submit">Deposit</button>
+        </form>
+    </div>
+
+    <!-- 3. Withdraw Money -->
+    <div class="section">
+        <h3>3. Withdraw Money (PIN required)</h3>
+        <form action="/account/withdraw" method="post">
+            <input type="text" name="accountNumber" placeholder="Account Number" required>
+            <input type="password" name="pinCode" placeholder="PIN-code" maxlength="4" required>
+            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+            <button type="submit">Withdraw</button>
+        </form>
+    </div>
+
+    <!-- 4. Transfer Funds -->
+    <div class="section">
+        <h3>4. Transfer Funds (Support Exchange Rates)</h3>
+        <form action="/account/transfer" method="post">
+            <input type="text" name="senderNumber" placeholder="Sender Account Number" required>
+            <input type="text" name="receiverNumber" placeholder="Receiver Account Number" required>
+            <input type="password" name="pinCode" placeholder="Sender PIN-code" maxlength="4" required>
+            <input type="number" step="0.01" name="amount" placeholder="Transfer Amount" required>
+            <button type="submit">Transfer Funds</button>
+        </form>
+    </div>
+
+    <!-- 5. View Statement -->
+    <div class="section">
+        <h3>5. View Statement (Transaction History)</h3>
+        <form action="/account/statement" method="get">
+            <input type="text" name="accountNumber" placeholder="Account Number" required>
+            <button type="submit">Get Statement</button>
+        </form>
+
+        <div th:if="${transactions}">
+            <h4 th:text="'History for: ' + ${targetAccount}"></h4>
+            <table>
+                <tr>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Time</th>
+                </tr>
+                <tr th:each="tx : ${transactions}">
+                    <td th:text="${tx.type}"></td>
+                    <td th:text="${tx.amount}"></td>
+                    <td th:text="${tx.senderAccountNumber}"></td>
+                    <td th:text="${tx.receiverAccountNumber}"></td>
+                    <td th:text="${tx.timestamp}"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 6. Global Bank Analytics -->
+    <div class="section">
+        <h3>6. Global Bank Analytics</h3>
+        <form action="/analytics" method="get">
+            <select name="currency">
+                <option value="AMD">AMD</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+            </select>
+            <button type="submit">Show Analytics</button>
+        </form>
+        <div th:if="${analyticsResult}" style="margin-top: 10px; font-weight: bold; color: #2980b9;" th:text="${analyticsResult}"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
