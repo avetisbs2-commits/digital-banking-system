@@ -1,8 +1,8 @@
 package com.bank.controller;
 
-import com.bank.model.Account;
+import com.bank.model.AccountEntity;
 import com.bank.model.Currency;
-import com.bank.model.Transaction;
+import com.bank.model.TransactionEntity;
 import com.bank.model.TransactionType;
 import com.bank.service.BankService;
 import org.springframework.stereotype.Controller;
@@ -17,19 +17,17 @@ import java.util.List;
 @Controller
 public class WebController {
 
-    private final BankService bankService;
+        private final BankService bankService;
 
     public WebController(BankService bankService) {
         this.bankService = bankService;
     }
 
-    // Главная страница
     @GetMapping("/")
     public String index() {
         return "index";
     }
 
-    // 1. Создание счета
     @PostMapping("/account/create")
     public String createAccount(@RequestParam String ownerName,
                                 @RequestParam String pinCode,
@@ -37,7 +35,7 @@ public class WebController {
                                 @RequestParam Currency currency,
                                 Model model) {
         try {
-            Account acc = bankService.createAccount(ownerName, pinCode, initialBalance, currency);
+            AccountEntity acc = bankService.createAccount(ownerName, pinCode, initialBalance, currency);
             model.addAttribute("message", "Account created successfully! Number: " + acc.getAccountNumber());
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -45,7 +43,6 @@ public class WebController {
         return "index";
     }
 
-    // 2. Пополнение
     @PostMapping("/account/deposit")
     public String deposit(@RequestParam String accountNumber,
                           @RequestParam BigDecimal amount,
@@ -59,7 +56,7 @@ public class WebController {
         return "index";
     }
 
-    // 3. Снятие
+
     @PostMapping("/account/withdraw")
     public String withdraw(@RequestParam String accountNumber,
                            @RequestParam String pinCode,
@@ -74,7 +71,6 @@ public class WebController {
         return "index";
     }
 
-    // 4. Перевод
     @PostMapping("/account/transfer")
     public String transfer(@RequestParam String senderNumber,
                            @RequestParam String receiverNumber,
@@ -90,11 +86,10 @@ public class WebController {
         return "index";
     }
 
-    // 5. Выписка по счету
     @GetMapping("/account/statement")
     public String statement(@RequestParam String accountNumber, Model model) {
         try {
-            List<Transaction> history = bankService.getAccountStatement(accountNumber);
+            List<TransactionEntity> history = bankService.getAccountStatement(accountNumber);
             model.addAttribute("transactions", history);
             model.addAttribute("targetAccount", accountNumber);
         } catch (Exception e) {
@@ -103,7 +98,6 @@ public class WebController {
         return "index";
     }
 
-    // 6. Аналитика
     @GetMapping("/analytics")
     public String analytics(@RequestParam Currency currency, Model model) {
         try {

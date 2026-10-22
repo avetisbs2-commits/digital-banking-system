@@ -2,11 +2,9 @@ package com.bank.service;
 
 import com.bank.exception.AccountNotFoundException;
 import com.bank.exception.BankTransactionException;
+import com.bank.exception.BankingException;
 import com.bank.exception.InsufficientFundsException;
-import com.bank.model.Account;
-import com.bank.model.Currency;
-import com.bank.model.Transaction;
-import com.bank.model.TransactionType;
+import com.bank.model.*;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -29,19 +27,25 @@ public class BankService {
     }
 
     @Transactional
-    public Account createAccount(String ownerName, String pinCode, BigDecimal initialBalance, Currency currency) {
+    public AccountEntity createAccount(String ownerName, String pinCode, BigDecimal initialBalance, Currency currency) {
         validatePin(pinCode);
         if (initialBalance == null || initialBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new BankTransactionException("The balance cannot be negative.");
         }
+        if (ownerName == null || ownerName.trim().isEmpty()) {
+            throw new BankingException("Owner name cannot be empty.");
+        }
+        if (currency == null) {
+            throw new BankingException("Currency must be specified.");
+        }
 
         String accountNumber = generateUniqueAccountNumber();
-        Account account = new Account(accountNumber, ownerName, pinCode, initialBalance, currency);
+        AccountEntity account = new AccountEntity(accountNumber, ownerName, pinCode, initialBalance, currency);
         return accountRepository.save(account);
     }
 
     @Transactional(readOnly = true)
-    public Account getAccountDetails(String accountNumber) {
+    public AccountEntity getAccountDetails(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account " + accountNumber + " not found."));
     }
@@ -53,12 +57,12 @@ public class BankService {
             throw new BankTransactionException("The amount must be greater than zero.");
         }
 
-        Account account = getAccountDetails(accountNumber);
+        AccountEntity account = getAccountDetails(accountNumber);
 
         account.setBalance(account.getBalance().add(amount));
         accountRepository.save(account);
 
-        Transaction transaction = new Transaction(null, accountNumber, amount, TransactionType.DEPOSIT);
+        TransactionEntity transaction = new TransactionEntity(null, accountNumber, amount, TransactionType.DEPOSIT);
         transactionRepository.save(transaction);
     }
 
@@ -68,7 +72,7 @@ public class BankService {
             throw new BankTransactionException("The withdrawal amount must be greater than zero.");
         }
 
-        Account account = getAccountDetails(accountNumber);
+        AccountEntity account = getAccountDetails(accountNumber);
         validatePinCode(account, pinCode);
 
         if (account.getBalance().compareTo(amount) < 0) {
@@ -78,7 +82,7 @@ public class BankService {
         account.setBalance(account.getBalance().subtract(amount));
         accountRepository.save(account);
 
-        Transaction transaction = new Transaction(accountNumber, null, amount, TransactionType.WITHDRAW);
+        TransactionEntity transaction = new TransactionEntity(accountNumber, null, amount, TransactionType.WITHDRAW);
         transactionRepository.save(transaction);
     }
 
@@ -92,8 +96,8 @@ public class BankService {
             throw new BankTransactionException("The sender's account and the receiver's account cannot be the same.");
         }
 
-        Account sender = getAccountDetails(senderAccNum);
-        Account receiver = getAccountDetails(receiverAccNum);
+        AccountEntity sender = getAccountDetails(senderAccNum);
+        AccountEntity receiver = getAccountDetails(receiverAccNum);
 
         validatePinCode(sender, pinCode);
 
@@ -109,7 +113,7 @@ public class BankService {
         accountRepository.save(sender);
         accountRepository.save(receiver);
 
-        Transaction transaction = new Transaction(senderAccNum, receiverAccNum, amount, TransactionType.TRANSFER);
+        TransactionEntity transaction = new TransactionEntity(senderAccNum, receiverAccNum, amount, TransactionType.TRANSFER);
         transactionRepository.save(transaction);
     }
 
@@ -134,7 +138,7 @@ public class BankService {
     }
 
     @Transactional(readOnly = true)
-    public List<Transaction> getAccountStatement(String accountNumber) {
+    public List<TransactionEntity> getAccountStatement(String accountNumber) {
         getAccountDetails(accountNumber);
         return transactionRepository.findByAccountNumber(accountNumber);
     }
@@ -156,7 +160,7 @@ public class BankService {
         }
     }
 
-    private void validatePinCode(Account account, String pinCode) {
+    private void validatePinCode(AccountEntity account, String pinCode) {
         if (!account.getPinCode().equals(pinCode)) {
             throw new BankTransactionException("Incorrect PIN code.");
         }

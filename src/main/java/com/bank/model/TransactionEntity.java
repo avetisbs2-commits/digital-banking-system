@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
-public class Transaction {
+public class TransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +29,9 @@ public class Transaction {
     @Column(nullable = false, length = 20)
     private TransactionType type;
 
-    public Transaction() {}
+    public TransactionEntity() {}
 
-    public Transaction(String senderAccountNumber, String receiverAccountNumber, BigDecimal amount, TransactionType type) {
+    public TransactionEntity(String senderAccountNumber, String receiverAccountNumber, BigDecimal amount, TransactionType type) {
         this.senderAccountNumber = senderAccountNumber;
         this.receiverAccountNumber = receiverAccountNumber;
         this.amount = amount;
