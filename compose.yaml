@@ -1,25 +1,44 @@
 services:
-  database:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: digital_bank_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   app:
     build: .
+    restart: unless-stopped
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/digital_bank_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks: [frontend, backend]
+
+  database:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: digital_bank_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
+
+  adminer:
+    image: adminer
+    profiles: ["tools"]
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8091:8080"
+    networks: [backend]
 
 volumes:
   postgres_data:
+
+networks:
+  frontend:
+  backend:
