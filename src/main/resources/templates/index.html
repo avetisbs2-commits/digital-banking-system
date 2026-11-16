@@ -123,16 +123,70 @@
         <div th:if="${analyticsResult}" style="margin-top: 10px; font-weight: bold; color: #2980b9;" th:text="${analyticsResult}"></div>
     </div>
 
-    <!-- 7. AI Assistant - UI only; backend integration will be added separately -->
+    <!-- 7. AI Banking Assistant -->
     <div class="section">
         <h3>7. AI Banking Assistant</h3>
         <p>Ask a question about banking, accounts, or currency.</p>
-        <textarea id="aiQuestion" placeholder="For example: What is the difference between AMD and USD?"></textarea>
-        <button type="button" disabled title="AI endpoint will be connected when AiController and AiService are implemented">Ask AI (coming soon)</button>
-        <div id="aiResponse" class="ai-response" aria-live="polite">AI response will appear here.</div>
+
+        <textarea
+                id="aiQuestion"
+                placeholder="For example: What is the difference between AMD and USD?"
+        ></textarea>
+
+        <button type="button" id="askAiButton">Ask AI</button>
+
+        <div id="aiResponse" class="ai-response" aria-live="polite">
+            AI response will appear here.
+        </div>
+    </div>
     </div>
 
-</div>
+
+<script>
+    const askAiButton = document.getElementById("askAiButton");
+    const aiQuestion = document.getElementById("aiQuestion");
+    const aiResponse = document.getElementById("aiResponse");
+
+    askAiButton.addEventListener("click", async () => {
+        const question = aiQuestion.value.trim();
+
+        if (!question) {
+            aiResponse.textContent = "Please enter a question.";
+            return;
+        }
+
+        askAiButton.disabled = true;
+        askAiButton.textContent = "Thinking...";
+        aiResponse.textContent = "Waiting for AI response...";
+
+        try {
+            const response = await fetch("/api/ai/ask", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question: question
+                })
+            });
+
+            const answer = await response.text();
+
+            if (!response.ok) {
+                throw new Error(answer || `HTTP error: ${response.status}`);
+            }
+
+            aiResponse.textContent = answer;
+
+        } catch (error) {
+            aiResponse.textContent = "Error: " + error.message;
+
+        } finally {
+            askAiButton.disabled = false;
+            askAiButton.textContent = "Ask AI";
+        }
+    });
+</script>
 
 </body>
 </html>
