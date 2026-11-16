@@ -9,14 +9,17 @@
         h1 { text-align: center; color: #2c3e50; }
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1e8ed; border-radius: 6px; background: #fafbfc; }
         h3 { margin-top: 0; color: #34495e; }
-        input, select { padding: 8px; margin: 5px 0; width: calc(100% - 18px); border: 1px solid #ccc; border-radius: 4px; }
+        input, select, textarea { padding: 8px; margin: 5px 0; width: calc(100% - 18px); border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+        textarea { min-height: 90px; resize: vertical; }
         button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background: #2980b9; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
         .success { color: #27ae60; font-weight: bold; background: #e8f8f5; padding: 10px; border-radius: 4px; }
         .error { color: #c0392b; font-weight: bold; background: #f9ebea; padding: 10px; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
         th { background: #f2f2f2; }
+        .ai-response { min-height: 50px; margin-top: 12px; padding: 12px; border: 1px dashed #bdc3c7; border-radius: 4px; background: white; color: #7f8c8d; }
     </style>
 </head>
 <body>
@@ -118,6 +121,15 @@
             <button type="submit">Show Analytics</button>
         </form>
         <div th:if="${analyticsResult}" style="margin-top: 10px; font-weight: bold; color: #2980b9;" th:text="${analyticsResult}"></div>
+    </div>
+
+    <!-- 7. AI Assistant - UI only; backend integration will be added separately -->
+    <div class="section">
+        <h3>7. AI Banking Assistant</h3>
+        <p>Ask a question about banking, accounts, or currency.</p>
+        <textarea id="aiQuestion" placeholder="For example: What is the difference between AMD and USD?"></textarea>
+        <button type="button" disabled title="AI endpoint will be connected when AiController and AiService are implemented">Ask AI (coming soon)</button>
+        <div id="aiResponse" class="ai-response" aria-live="polite">AI response will appear here.</div>
     </div>
 
 </div>
