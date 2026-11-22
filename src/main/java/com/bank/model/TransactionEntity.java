@@ -5,7 +5,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "transactions")
+@Table(
+        name = "transactions",
+        indexes = {
+                @Index(
+                        name = "idx_transactions_sender_timestamp",
+                        columnList = "sender_account_number, timestamp"
+                ),
+                @Index(
+                        name = "idx_transactions_receiver_timestamp",
+                        columnList = "receiver_account_number, timestamp"
+                )
+        }
+)
 public class TransactionEntity {
 
     @Id
