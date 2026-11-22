@@ -1,8 +1,10 @@
 # Digital Banking System
 
-A web-based digital banking application built with Java and Spring Boot. It demonstrates core banking operations, relational data persistence, transaction handling, currency conversion, account analytics, and an AI-powered banking assistant.
+A Java backend project built with **Spring Boot**, **PostgreSQL**, and **Docker**. The application provides account management, deposits, withdrawals, transfers, transaction history, analytics, currency conversion, and an AI-powered banking assistant through the OpenAI API.
 
-> **Project type:** Educational/demo application. It is not intended for real financial transactions or production banking use.
+This repository demonstrates practical backend engineering concepts: layered architecture, REST endpoints, relational persistence with Spring Data JPA, transactional business operations, external API integration, containerization, and CI/CD with GitHub Actions.
+
+> **Project context:** Personal learning and portfolio project. It is not a production banking system and must not be used for real financial transactions.
 
 ## Features
 
@@ -14,6 +16,19 @@ A web-based digital banking application built with Java and Spring Boot. It demo
 - Display basic banking analytics, including total balances by currency and transfer counts.
 - Ask banking-related questions through the AI Banking Assistant.
 - Persist accounts and transactions in PostgreSQL.
+
+## Engineering Highlights
+
+The project brings together several backend engineering concepts in one application:
+
+- **Layered design:** separates HTTP handling, business logic, persistence, and presentation.
+- **Transactional operations:** uses `@Transactional` for banking operations that update balances and transaction records.
+- **Data access:** uses Spring Data JPA repositories and Hibernate entity mapping with PostgreSQL.
+- **External service integration:** calls the OpenAI Responses API from the backend using Spring's `RestClient`.
+- **Containerized environment:** provides Docker and Docker Compose configuration for the application and database.
+- **Automated workflow:** uses GitHub Actions to verify the Maven build, build a Docker image, and trigger deployment to Render.
+
+These are implementation details of the current project, not claims of production-grade banking security or scalability.
 
 ## Architecture
 
