@@ -1,146 +1,298 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Digital Bank System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101b2d">
+    <title>Digital Bank — Modern Banking</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1e8ed; border-radius: 6px; background: #fafbfc; }
-        h3 { margin-top: 0; color: #34495e; }
-        input, select, textarea { padding: 8px; margin: 5px 0; width: calc(100% - 18px); border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
-        textarea { min-height: 90px; resize: vertical; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2980b9; }
-        button:disabled { background: #95a5a6; cursor: not-allowed; }
-        .success { color: #27ae60; font-weight: bold; background: #e8f8f5; padding: 10px; border-radius: 4px; }
-        .error { color: #c0392b; font-weight: bold; background: #f9ebea; padding: 10px; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
-        th { background: #f2f2f2; }
-        .ai-response { min-height: 50px; margin-top: 12px; padding: 12px; border: 1px dashed #bdc3c7; border-radius: 4px; background: white; color: #7f8c8d; }
+        :root {
+            color-scheme: light;
+            --navy: #101b2d;
+            --navy-soft: #192941;
+            --ink: #172338;
+            --muted: #718096;
+            --paper: #f4f6f8;
+            --white: #ffffff;
+            --line: #e7ebf0;
+            --yellow: #f5c84c;
+            --yellow-dark: #e3b42f;
+            --green: #18865b;
+            --red: #c84b4b;
+            --radius: 18px;
+            --shadow: 0 12px 35px rgba(22, 36, 57, .07);
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+        button, input, select, textarea { font: inherit; }
+        .app-shell { min-height: 100vh; }
+        .topbar {
+            height: 76px;
+            padding: 0 clamp(20px, 5vw, 72px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--navy);
+            color: white;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 750; letter-spacing: -.4px; }
+        .brand-mark {
+            width: 38px; height: 38px; display: grid; place-items: center;
+            border-radius: 12px; background: var(--yellow); color: var(--navy);
+            font-size: 19px; font-weight: 900;
+        }
+        .brand small { display: block; color: #aab7c8; font-size: 10px; font-weight: 600; letter-spacing: 1.7px; text-transform: uppercase; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; color: #c4cfdd; font-size: 13px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #58c99a; box-shadow: 0 0 0 4px rgba(88,201,154,.13); }
+        main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 70px; }
+        .welcome { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 28px; }
+        .eyebrow { color: #9a7a1c; font-size: 11px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase; }
+        h1 { margin: 7px 0 5px; font-size: clamp(28px, 4vw, 38px); line-height: 1.15; letter-spacing: -1.4px; }
+        .welcome p { margin: 0; color: var(--muted); font-size: 14px; }
+        .date-chip { padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: white; color: #66758a; font-size: 12px; white-space: nowrap; }
+        .notice { margin-bottom: 20px; padding: 14px 17px; border-radius: 12px; font-size: 14px; font-weight: 650; }
+        .success { color: #126b49; background: #e8f6ef; border: 1px solid #c9ead9; }
+        .error { color: #a73535; background: #fff0ef; border: 1px solid #f4d3d0; }
+        .hero-card {
+            position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center;
+            min-height: 205px; padding: 32px 38px; border-radius: 22px;
+            background: linear-gradient(115deg, #14243b 0%, #203956 100%); color: white; box-shadow: var(--shadow);
+        }
+        .hero-card:after {
+            content: ""; position: absolute; width: 280px; height: 280px; right: 11%; top: -155px;
+            border: 1px solid rgba(255,255,255,.12); border-radius: 50%;
+            box-shadow: 0 0 0 35px rgba(255,255,255,.025), 0 0 0 75px rgba(255,255,255,.02);
+        }
+        .hero-copy { position: relative; z-index: 1; max-width: 570px; }
+        .hero-copy span { color: var(--yellow); font-size: 11px; font-weight: 800; letter-spacing: 1.7px; text-transform: uppercase; }
+        .hero-copy h2 { margin: 10px 0 8px; font-size: clamp(23px, 3vw, 30px); letter-spacing: -.8px; }
+        .hero-copy p { margin: 0; max-width: 490px; color: #c3cfdd; font-size: 14px; }
+        .hero-symbol { position: relative; z-index: 1; width: 112px; height: 112px; display: grid; place-items: center; border: 1px solid rgba(245,200,76,.4); border-radius: 28px; color: var(--yellow); font-size: 48px; transform: rotate(7deg); }
+        .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 36px 0 16px; }
+        .section-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.45px; }
+        .section-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+        .module-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .panel { min-width: 0; padding: 23px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); box-shadow: 0 5px 18px rgba(22,36,57,.035); }
+        .panel-head { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 19px; }
+        .panel-icon { flex: 0 0 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: #fff6d9; color: #99751b; font-size: 19px; }
+        .panel-head h3 { margin: 1px 0 3px; font-size: 15px; letter-spacing: -.2px; }
+        .panel-head p { margin: 0; color: var(--muted); font-size: 12px; }
+        .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .field { min-width: 0; }
+        .field.full { grid-column: 1 / -1; }
+        label { display: block; margin: 0 0 6px; color: #59677a; font-size: 11px; font-weight: 750; }
+        input, select, textarea {
+            width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #dfe5ec; border-radius: 10px;
+            outline: none; background: #fbfcfd; color: var(--ink); font-size: 13px; transition: border-color .18s, box-shadow .18s;
+        }
+        input::placeholder, textarea::placeholder { color: #a1acb9; }
+        input:focus, select:focus, textarea:focus { border-color: #d9b33f; box-shadow: 0 0 0 3px rgba(245,200,76,.17); background: white; }
+        .primary-btn {
+            display: inline-flex; justify-content: center; align-items: center; gap: 8px; width: 100%; margin-top: 15px;
+            padding: 11px 15px; border: 0; border-radius: 10px; background: var(--navy); color: white;
+            font-size: 12px; font-weight: 750; cursor: pointer; transition: background .18s, transform .18s;
+        }
+        .primary-btn:hover { background: #263d5b; transform: translateY(-1px); }
+        .primary-btn.accent { background: var(--yellow); color: #263248; }
+        .primary-btn.accent:hover { background: var(--yellow-dark); }
+        .primary-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+        .wide-panel { grid-column: 1 / -1; }
+        .inline-form { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: 10px; align-items: end; }
+        .inline-form .primary-btn { width: auto; min-width: 145px; margin: 0; }
+        .result-line { margin-top: 14px; padding: 13px 15px; border-radius: 10px; background: #f4f7fa; color: #34445b; font-size: 13px; font-weight: 650; }
+        .table-wrap { overflow-x: auto; margin-top: 17px; border: 1px solid var(--line); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 12px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+        th { background: #f7f9fb; color: #66758a; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+        td { color: #3b4a5e; }
+        tr:last-child td { border-bottom: 0; }
+        .ai-panel { background: linear-gradient(145deg, #fff 0%, #fffdf5 100%); }
+        .ai-panel .panel-icon { background: #fff0bd; }
+        textarea { min-height: 100px; resize: vertical; }
+        .ai-response { min-height: 54px; margin-top: 13px; padding: 14px; border: 1px dashed #d8dfe7; border-radius: 11px; background: rgba(255,255,255,.8); color: #69788b; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+        footer { padding: 22px 20px; border-top: 1px solid var(--line); color: #8793a2; text-align: center; font-size: 11px; }
+        footer strong { color: #536176; }
+        @media (max-width: 760px) {
+            main { width: min(100% - 28px, 600px); padding-top: 28px; }
+            .topbar { height: 66px; padding: 0 18px; }
+            .welcome { align-items: flex-start; flex-direction: column; }
+            .hero-card { min-height: 190px; padding: 25px; }
+            .hero-symbol { width: 76px; height: 76px; border-radius: 21px; font-size: 34px; }
+            .module-grid { grid-template-columns: 1fr; }
+            .wide-panel { grid-column: auto; }
+            .inline-form { grid-template-columns: 1fr; }
+            .inline-form .primary-btn { width: 100%; }
+        }
+        @media (max-width: 440px) {
+            .topbar-right { font-size: 0; }
+            .topbar-right .status-dot { margin-right: 3px; }
+            .hero-symbol { display: none; }
+            .panel { padding: 19px; }
+            .field-grid { grid-template-columns: 1fr; }
+            .field.full { grid-column: auto; }
+        }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Digital Bank System</h1>
-
-    <!-- Уведомления об успехе или ошибке -->
-    <div th:if="${message}" class="success" th:text="${message}"></div>
-    <div th:if="${error}" class="error" th:text="${error}"></div>
-
-    <!-- 1. Open New Account -->
-    <div class="section">
-        <h3>1. Open New Account</h3>
-        <form action="/account/create" method="post">
-            <input type="text" name="ownerName" placeholder="Owner Name" required>
-            <input type="password" name="pinCode" placeholder="PIN-code (4 digits)" maxlength="4" required>
-            <input type="number" step="0.01" name="initialBalance" placeholder="Initial Balance" required>
-            <select name="currency">
-                <option value="AMD">AMD</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-            </select>
-            <button type="submit">Open Account</button>
-        </form>
-    </div>
-
-    <!-- 2. Deposit Money -->
-    <div class="section">
-        <h3>2. Deposit Money</h3>
-        <form action="/account/deposit" method="post">
-            <input type="text" name="accountNumber" placeholder="Account Number" required>
-            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
-            <button type="submit">Deposit</button>
-        </form>
-    </div>
-
-    <!-- 3. Withdraw Money -->
-    <div class="section">
-        <h3>3. Withdraw Money (PIN required)</h3>
-        <form action="/account/withdraw" method="post">
-            <input type="text" name="accountNumber" placeholder="Account Number" required>
-            <input type="password" name="pinCode" placeholder="PIN-code" maxlength="4" required>
-            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
-            <button type="submit">Withdraw</button>
-        </form>
-    </div>
-
-    <!-- 4. Transfer Funds -->
-    <div class="section">
-        <h3>4. Transfer Funds (Support Exchange Rates)</h3>
-        <form action="/account/transfer" method="post">
-            <input type="text" name="senderNumber" placeholder="Sender Account Number" required>
-            <input type="text" name="receiverNumber" placeholder="Receiver Account Number" required>
-            <input type="password" name="pinCode" placeholder="Sender PIN-code" maxlength="4" required>
-            <input type="number" step="0.01" name="amount" placeholder="Transfer Amount" required>
-            <button type="submit">Transfer Funds</button>
-        </form>
-    </div>
-
-    <!-- 5. View Statement -->
-    <div class="section">
-        <h3>5. View Statement (Transaction History)</h3>
-        <form action="/account/statement" method="get">
-            <input type="text" name="accountNumber" placeholder="Account Number" required>
-            <button type="submit">Get Statement</button>
-        </form>
-
-        <div th:if="${transactions}">
-            <h4 th:text="'History for: ' + ${targetAccount}"></h4>
-            <table>
-                <tr>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Sender</th>
-                    <th>Receiver</th>
-                    <th>Time</th>
-                </tr>
-                <tr th:each="tx : ${transactions}">
-                    <td th:text="${tx.type}"></td>
-                    <td th:text="${tx.amount}"></td>
-                    <td th:text="${tx.senderAccountNumber}"></td>
-                    <td th:text="${tx.receiverAccountNumber}"></td>
-                    <td th:text="${tx.timestamp}"></td>
-                </tr>
-            </table>
+<div class="app-shell">
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">D</div>
+            <div>Digital Bank<small>Banking made clearer</small></div>
         </div>
-    </div>
+        <div class="topbar-right"><span class="status-dot"></span> Demo environment</div>
+    </header>
 
-    <!-- 6. Global Bank Analytics -->
-    <div class="section">
-        <h3>6. Global Bank Analytics</h3>
-        <form action="/analytics" method="get">
-            <select name="currency">
-                <option value="AMD">AMD</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-            </select>
-            <button type="submit">Show Analytics</button>
-        </form>
-        <div th:if="${analyticsResult}" style="margin-top: 10px; font-weight: bold; color: #2980b9;" th:text="${analyticsResult}"></div>
-    </div>
+    <main>
+        <section class="welcome">
+            <div>
+                <div class="eyebrow">Your finances, in one place</div>
+                <h1>Banking dashboard</h1>
+                <p>Manage accounts, move funds, and explore your banking activity.</p>
+            </div>
+            <div class="date-chip">✦ &nbsp; Secure demo workspace</div>
+        </section>
 
-    <!-- 7. AI Banking Assistant -->
-    <div class="section">
-        <h3>7. AI Banking Assistant</h3>
-        <p>Ask a question about banking, accounts, or currency.</p>
+        <div th:if="${message}" class="notice success" th:text="${message}"></div>
+        <div th:if="${error}" class="notice error" th:text="${error}"></div>
 
-        <textarea
-                id="aiQuestion"
-                placeholder="For example: What is the difference between AMD and USD?"
-        ></textarea>
+        <section class="hero-card">
+            <div class="hero-copy">
+                <span>Digital banking experience</span>
+                <h2>Simple tools. Clear overview.</h2>
+                <p>Open an account, manage deposits and transfers, review transaction history, or get help from the AI banking assistant.</p>
+            </div>
+            <div class="hero-symbol" aria-hidden="true">↗</div>
+        </section>
 
-        <button type="button" id="askAiButton">Ask AI</button>
-
-        <div id="aiResponse" class="ai-response" aria-live="polite">
-            AI response will appear here.
+        <div class="section-heading">
+            <div><h2>Banking services</h2><p>Choose an action to get started</p></div>
         </div>
-    </div>
-    </div>
 
+        <section class="module-grid">
+            <article class="panel">
+                <div class="panel-head">
+                    <div class="panel-icon">＋</div>
+                    <div><h3>Open a new account</h3><p>Create an account in a few steps</p></div>
+                </div>
+                <form action="/account/create" method="post">
+                    <div class="field-grid">
+                        <div class="field full"><label for="ownerName">ACCOUNT HOLDER</label><input id="ownerName" type="text" name="ownerName" placeholder="Full name" autocomplete="name" required></div>
+                        <div class="field"><label for="newPin">4-DIGIT PIN</label><input id="newPin" type="password" name="pinCode" placeholder="••••" inputmode="numeric" maxlength="4" required></div>
+                        <div class="field"><label for="initialBalance">INITIAL BALANCE</label><input id="initialBalance" type="number" step="0.01" min="0" name="initialBalance" placeholder="0.00" required></div>
+                        <div class="field full"><label for="newCurrency">ACCOUNT CURRENCY</label><select id="newCurrency" name="currency"><option value="AMD">AMD — Armenian Dram</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option></select></div>
+                    </div>
+                    <button class="primary-btn accent" type="submit">Create account <span>→</span></button>
+                </form>
+            </article>
+
+            <article class="panel">
+                <div class="panel-head">
+                    <div class="panel-icon">↓</div>
+                    <div><h3>Deposit funds</h3><p>Add money to an existing account</p></div>
+                </div>
+                <form action="/account/deposit" method="post">
+                    <div class="field-grid">
+                        <div class="field full"><label for="depositAccount">ACCOUNT NUMBER</label><input id="depositAccount" type="text" name="accountNumber" placeholder="Enter account number" required></div>
+                        <div class="field full"><label for="depositAmount">DEPOSIT AMOUNT</label><input id="depositAmount" type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required></div>
+                    </div>
+                    <button class="primary-btn" type="submit">Deposit funds <span>→</span></button>
+                </form>
+            </article>
+
+            <article class="panel">
+                <div class="panel-head">
+                    <div class="panel-icon">↑</div>
+                    <div><h3>Withdraw funds</h3><p>PIN verification is required</p></div>
+                </div>
+                <form action="/account/withdraw" method="post">
+                    <div class="field-grid">
+                        <div class="field full"><label for="withdrawAccount">ACCOUNT NUMBER</label><input id="withdrawAccount" type="text" name="accountNumber" placeholder="Enter account number" required></div>
+                        <div class="field"><label for="withdrawPin">4-DIGIT PIN</label><input id="withdrawPin" type="password" name="pinCode" placeholder="••••" inputmode="numeric" maxlength="4" required></div>
+                        <div class="field"><label for="withdrawAmount">AMOUNT</label><input id="withdrawAmount" type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required></div>
+                    </div>
+                    <button class="primary-btn" type="submit">Withdraw funds <span>→</span></button>
+                </form>
+            </article>
+
+            <article class="panel">
+                <div class="panel-head">
+                    <div class="panel-icon">⇄</div>
+                    <div><h3>Transfer money</h3><p>Send funds between accounts</p></div>
+                </div>
+                <form action="/account/transfer" method="post">
+                    <div class="field-grid">
+                        <div class="field full"><label for="senderNumber">FROM ACCOUNT</label><input id="senderNumber" type="text" name="senderNumber" placeholder="Sender account number" required></div>
+                        <div class="field full"><label for="receiverNumber">TO ACCOUNT</label><input id="receiverNumber" type="text" name="receiverNumber" placeholder="Receiver account number" required></div>
+                        <div class="field"><label for="transferPin">SENDER PIN</label><input id="transferPin" type="password" name="pinCode" placeholder="••••" inputmode="numeric" maxlength="4" required></div>
+                        <div class="field"><label for="transferAmount">AMOUNT</label><input id="transferAmount" type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required></div>
+                    </div>
+                    <button class="primary-btn" type="submit">Transfer funds <span>→</span></button>
+                </form>
+            </article>
+
+            <article class="panel wide-panel">
+                <div class="panel-head">
+                    <div class="panel-icon">▤</div>
+                    <div><h3>Transaction statement</h3><p>Review the activity linked to an account</p></div>
+                </div>
+                <form class="inline-form" action="/account/statement" method="get">
+                    <div class="field"><label for="statementAccount">ACCOUNT NUMBER</label><input id="statementAccount" type="text" name="accountNumber" placeholder="Enter account number" required></div>
+                    <button class="primary-btn" type="submit">View statement <span>→</span></button>
+                </form>
+                <div th:if="${transactions}">
+                    <div class="result-line" th:text="'Transaction history · ' + ${targetAccount}"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Type</th><th>Amount</th><th>Sender</th><th>Receiver</th><th>Date &amp; time</th></tr></thead>
+                            <tbody>
+                            <tr th:each="tx : ${transactions}">
+                                <td th:text="${tx.type}"></td>
+                                <td th:text="${tx.amount}"></td>
+                                <td th:text="${tx.senderAccountNumber}"></td>
+                                <td th:text="${tx.receiverAccountNumber}"></td>
+                                <td th:text="${tx.timestamp}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+
+            <article class="panel wide-panel">
+                <div class="panel-head">
+                    <div class="panel-icon">◈</div>
+                    <div><h3>Bank analytics</h3><p>Explore aggregate balances and transfer activity</p></div>
+                </div>
+                <form class="inline-form" action="/analytics" method="get">
+                    <div class="field"><label for="analyticsCurrency">CURRENCY</label><select id="analyticsCurrency" name="currency"><option value="AMD">AMD — Armenian Dram</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option></select></div>
+                    <button class="primary-btn" type="submit">Show analytics <span>→</span></button>
+                </form>
+                <div th:if="${analyticsResult}" class="result-line" th:text="${analyticsResult}"></div>
+            </article>
+
+            <article class="panel wide-panel ai-panel">
+                <div class="panel-head">
+                    <div class="panel-icon">✧</div>
+                    <div><h3>AI banking assistant</h3><p>Ask about banking concepts, accounts, or currencies</p></div>
+                </div>
+                <label for="aiQuestion">YOUR QUESTION</label>
+                <textarea id="aiQuestion" placeholder="For example: What is the difference between AMD and USD?"></textarea>
+                <button class="primary-btn accent" type="button" id="askAiButton" style="max-width: 190px">Ask assistant <span>→</span></button>
+                <div id="aiResponse" class="ai-response" aria-live="polite">Your assistant's response will appear here.</div>
+            </article>
+        </section>
+    </main>
+
+    <footer><strong>Digital Bank</strong> · Portfolio demonstration project · Not for real financial transactions</footer>
+</div>
 
 <script>
     const askAiButton = document.getElementById("askAiButton");
@@ -151,42 +303,40 @@
         const question = aiQuestion.value.trim();
 
         if (!question) {
-            aiResponse.textContent = "Please enter a question.";
+            aiResponse.textContent = "Please enter a question first.";
+            aiQuestion.focus();
             return;
         }
 
         askAiButton.disabled = true;
         askAiButton.textContent = "Thinking...";
-        aiResponse.textContent = "Waiting for AI response...";
+        aiResponse.textContent = "Preparing your answer...";
 
         try {
             const response = await fetch("/api/ai/ask", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    question: question
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question })
             });
 
             const answer = await response.text();
-
             if (!response.ok) {
                 throw new Error(answer || `HTTP error: ${response.status}`);
             }
-
             aiResponse.textContent = answer;
-
         } catch (error) {
-            aiResponse.textContent = "Error: " + error.message;
-
+            aiResponse.textContent = "Unable to get a response: " + error.message;
         } finally {
             askAiButton.disabled = false;
-            askAiButton.textContent = "Ask AI";
+            askAiButton.innerHTML = 'Ask assistant <span>→</span>';
+        }
+    });
+
+    aiQuestion.addEventListener("keydown", event => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+            askAiButton.click();
         }
     });
 </script>
-
 </body>
 </html>
