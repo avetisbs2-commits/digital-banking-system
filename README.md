@@ -16,6 +16,7 @@ This repository demonstrates practical backend engineering concepts: layered arc
 - Display basic banking analytics, including total balances by currency and transfer counts.
 - Ask banking-related questions through the AI Banking Assistant.
 - Persist accounts and transactions in PostgreSQL.
+- Use a redesigned, responsive banking dashboard with dedicated panels for account and transaction operations.
 
 ## Engineering Highlights
 
@@ -24,6 +25,7 @@ The project brings together several backend engineering concepts in one applicat
 - **Layered design:** separates HTTP handling, business logic, persistence, and presentation.
 - **Transactional operations:** uses `@Transactional` for banking operations that update balances and transaction records.
 - **Data access:** uses Spring Data JPA repositories and Hibernate entity mapping with PostgreSQL.
+- **Query-oriented indexing:** defines composite indexes for sender/receiver account numbers and transaction timestamps to support account-history lookups ordered by time.
 - **External service integration:** calls the OpenAI Responses API from the backend using Spring's `RestClient`.
 - **Containerized environment:** provides Docker and Docker Compose configuration for the application and database.
 - **Automated workflow:** uses GitHub Actions to verify the Maven build, build a Docker image, and trigger deployment to Render.
@@ -107,10 +109,9 @@ Banking operations are coordinated by `BankService`. Methods that modify account
 
 ### Frontend
 
-- HTML
-- CSS
-- JavaScript
+- HTML, CSS, and JavaScript
 - Thymeleaf server-side templates
+- Responsive dashboard layout with mobile breakpoints
 
 ### Build, Testing, and DevOps
 
@@ -190,6 +191,17 @@ Content-Type: application/json
   "question": "What is the difference between AMD and USD?"
 }
 ```
+
+## Database Design and Indexing
+
+The `transactions` table defines two composite indexes through JPA's `@Table(indexes = ...)` mapping:
+
+| Index | Columns | Intended query pattern |
+|---|---|---|
+| `idx_transactions_sender_timestamp` | `sender_account_number, timestamp` | Find transactions sent by an account and retrieve recent records first. |
+| `idx_transactions_receiver_timestamp` | `receiver_account_number, timestamp` | Find transactions received by an account and retrieve recent records first. |
+
+The transaction-history repository query filters by sender or receiver account number and sorts by timestamp descending. The indexes are intended to help PostgreSQL locate the relevant account records and support the time ordering. The actual execution plan depends on table size, data distribution, and PostgreSQL's cost estimates; index creation alone does not guarantee a faster query in every environment.
 
 ## Database Model
 
