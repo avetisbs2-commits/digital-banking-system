@@ -4,26 +4,48 @@ import com.bank.exception.AccountNotFoundException;
 import com.bank.exception.BankTransactionException;
 import com.bank.exception.BankingException;
 import com.bank.exception.InsufficientFundsException;
-import com.bank.model.*;
+import com.bank.exception.PinVerificationException;
+import com.bank.model.AccountEntity;
+import com.bank.model.Currency;
+import com.bank.model.TransactionEntity;
+import com.bank.model.TransactionType;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.TransactionRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 @Service
 public class BankService {
 
+    private static final Pattern PIN_FORMAT = Pattern.compile("^\\d{4}$");
+    private static final int MAX_FAILED_PIN_ATTEMPTS = 5;
+    private static final Duration PIN_LOCK_DURATION = Duration.ofMinutes(15);
+
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final PasswordEncoder pinPasswordEncoder;
+    private final Clock clock;
 
-    public BankService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    public BankService(
+            AccountRepository accountRepository,
+            TransactionRepository transactionRepository,
+            PasswordEncoder pinPasswordEncoder,
+            Clock clock
+    ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.pinPasswordEncoder = pinPasswordEncoder;
+        this.clock = clock;
     }
 
     @Transactional
@@ -40,7 +62,8 @@ public class BankService {
         }
 
         String accountNumber = generateUniqueAccountNumber();
-        AccountEntity account = new AccountEntity(accountNumber, ownerName, pinCode, initialBalance, currency);
+        String pinHash = pinPasswordEncoder.encode(pinCode);
+        AccountEntity account = new AccountEntity(accountNumber, ownerName, pinHash, initialBalance, currency);
         return accountRepository.save(account);
     }
 
@@ -49,7 +72,6 @@ public class BankService {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account " + accountNumber + " not found."));
     }
-
 
     @Transactional
     public void deposit(String accountNumber, BigDecimal amount) {
@@ -66,14 +88,14 @@ public class BankService {
         transactionRepository.save(transaction);
     }
 
-    @Transactional
-    public void withdraw(String accountNumber, String pinCode, BigDecimal amount) {
+    @Transactional(noRollbackFor = InsufficientFundsException.class)
+    public void withdraw(String accountNumber, String pinCode, BigDecimal amount) throws PinVerificationException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankTransactionException("The withdrawal amount must be greater than zero.");
         }
 
-        AccountEntity account = getAccountDetails(accountNumber);
-        validatePinCode(account, pinCode);
+        AccountEntity account = getAccountForPinVerification(accountNumber);
+        verifyPin(account, pinCode);
 
         if (account.getBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsException("Insufficient funds. Current balance:" + account.getBalance());
@@ -86,8 +108,9 @@ public class BankService {
         transactionRepository.save(transaction);
     }
 
-    @Transactional
-    public void transfer(String senderAccNum, String receiverAccNum, String pinCode, BigDecimal amount) {
+    @Transactional(noRollbackFor = InsufficientFundsException.class)
+    public void transfer(String senderAccNum, String receiverAccNum, String pinCode, BigDecimal amount)
+            throws PinVerificationException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankTransactionException("The transfer amount must be greater than zero.");
         }
@@ -96,10 +119,9 @@ public class BankService {
             throw new BankTransactionException("The sender's account and the receiver's account cannot be the same.");
         }
 
-        AccountEntity sender = getAccountDetails(senderAccNum);
+        AccountEntity sender = getAccountForPinVerification(senderAccNum);
+        verifyPin(sender, pinCode);
         AccountEntity receiver = getAccountDetails(receiverAccNum);
-
-        validatePinCode(sender, pinCode);
 
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsException("The sender has insufficient funds for the transfer.");
@@ -154,15 +176,56 @@ public class BankService {
         return transactionRepository.countByType(type);
     }
 
-    private void validatePin(String pinCode) {
-        if (pinCode == null || !pinCode.matches("^\\d{4}$")) {
-            throw new BankTransactionException("The PIN code must consist of exactly 4 digits.");
+    private AccountEntity getAccountForPinVerification(String accountNumber) {
+        return accountRepository.findByAccountNumberForPinVerification(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account " + accountNumber + " not found."));
+    }
+
+    private void verifyPin(AccountEntity account, String submittedPin) throws PinVerificationException {
+        Instant now = clock.instant();
+        Instant lockedUntil = account.getPinLockedUntil();
+
+        if (lockedUntil != null && lockedUntil.isAfter(now)) {
+            throw new PinVerificationException("PIN verification is temporarily locked. Please try again later.");
+        }
+
+        if (lockedUntil != null) {
+            account.setFailedPinAttempts(0);
+            account.setPinLockedUntil(null);
+        }
+
+        String pinHash = account.getPinHash();
+        boolean valid = submittedPin != null
+                && PIN_FORMAT.matcher(submittedPin).matches()
+                && pinHash != null
+                && pinPasswordEncoder.matches(submittedPin, pinHash);
+
+        if (!valid) {
+            int attempts = account.getFailedPinAttempts() + 1;
+            account.setFailedPinAttempts(attempts);
+
+            boolean locked = attempts >= MAX_FAILED_PIN_ATTEMPTS;
+            if (locked) {
+                account.setPinLockedUntil(now.plus(PIN_LOCK_DURATION));
+            }
+
+            accountRepository.save(account);
+            String message = locked
+                    ? "PIN verification is temporarily locked. Please try again later."
+                    : "Incorrect PIN.";
+            throw new PinVerificationException(message);
+        }
+
+        if (account.getFailedPinAttempts() != 0 || lockedUntil != null) {
+            account.setFailedPinAttempts(0);
+            account.setPinLockedUntil(null);
+            accountRepository.save(account);
         }
     }
 
-    private void validatePinCode(AccountEntity account, String pinCode) {
-        if (!account.getPinCode().equals(pinCode)) {
-            throw new BankTransactionException("Incorrect PIN code.");
+    private void validatePin(String pinCode) {
+        if (pinCode == null || !PIN_FORMAT.matcher(pinCode).matches()) {
+            throw new BankTransactionException("The PIN code must consist of exactly 4 digits.");
         }
     }
 

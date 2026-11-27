@@ -1,44 +1,33 @@
 package com.bank.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 
-@Service
 public class AiService {
 
-    private final RestClient restClient;
     private static final String API_URL = "https://api.openai.com/v1/responses";
+
     private final String apiKey;
+    private final RestClient restClient;
 
-    public AiService(RestClient.Builder builder) {
-        this.restClient = builder.build();
-
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
-
-        String key = System.getenv("OPENAI_API_KEY");
-
-        if (key == null || key.isBlank()) {
-            key = dotenv.get("OPENAI_API_KEY");
-        }
-
-        this.apiKey = key;
-
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException(
-                    "OPENAI_API_KEY is not configured"
-            );
-        }
+    public AiService(String apiKey, RestClient restClient) {
+        this.apiKey = apiKey;
+        this.restClient = restClient;
     }
 
-    public String ask(String question){
+    public boolean isAvailable() {
+        return apiKey != null && !apiKey.isBlank();
+    }
+
+    public String ask(String question) {
+        if (!isAvailable()) {
+            throw new IllegalStateException("AI assistant is not configured.");
+        }
+
         JsonNode responseJson = restClient.post()
                 .uri(API_URL)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)

@@ -97,7 +97,7 @@ Banking operations are coordinated by `BankService`. Methods that modify account
 - Thymeleaf
 - Spring Framework `RestClient` for outbound HTTP requests
 - Jackson for parsing the AI API response
-- dotenv-java for loading local environment variables
+- Spring Boot configuration for environment variables and an optional local .env file
 
 ### Database
 
@@ -128,6 +128,7 @@ Banking operations are coordinated by `BankService`. Methods that modify account
 - OpenAI Responses API
 - Spring Framework `RestClient`
 - API key supplied through the `OPENAI_API_KEY` environment variable or a local `.env` file
+- The API key is optional for the banking application; without it, only the AI assistant is unavailable.
 
 The AI integration is implemented in `AiController` and `AiService`. The browser sends a question to the application's backend; the backend makes the external API request and returns the generated text.
 
@@ -241,6 +242,8 @@ LOCAL_DB_PASSWORD=your_local_postgres_password
 OPENAI_API_KEY=your_openai_api_key
 ```
 
+The OPENAI_API_KEY entry is optional; omit it to run banking features without the AI assistant.
+
 For Docker Compose, also provide:
 
 ```dotenv
@@ -301,7 +304,7 @@ The main application configuration is in `src/main/resources/application.propert
 
 This repository is a learning project and should not be used to store real customer data or process real money.
 
-- PIN codes are currently stored directly in the account entity; production systems must store appropriately salted password hashes instead.
+- Account PINs are stored as BCrypt hashes. On startup, existing four-digit plaintext PIN values are converted in place; unexpected stored formats stop startup without exposing the value. Four-digit PINs remain low-entropy credentials and do not replace user authentication.
 - The application does not currently include a full authentication and authorization framework such as Spring Security.
 - Currency exchange rates are currently defined in application code and are not fetched from a live exchange-rate provider.
 - The application does not implement the full security, compliance, auditing, and operational controls required of a real banking system.

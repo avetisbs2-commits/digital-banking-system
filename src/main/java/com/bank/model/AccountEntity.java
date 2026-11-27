@@ -1,7 +1,9 @@
 package com.bank.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "accounts")
@@ -18,7 +20,13 @@ public class AccountEntity {
     private String ownerName;
 
     @Column(name = "pin_code", nullable = false)
-    private String pinCode;
+    private String pinHash;
+
+    @Column(name = "failed_pin_attempts")
+    private Integer failedPinAttempts = 0;
+
+    @Column(name = "pin_locked_until")
+    private Instant pinLockedUntil;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance;
@@ -29,10 +37,10 @@ public class AccountEntity {
 
     public AccountEntity() {}
 
-    public AccountEntity(String accountNumber, String ownerName, String pinCode, BigDecimal balance, Currency currency) {
+    public AccountEntity(String accountNumber, String ownerName, String pinHash, BigDecimal balance, Currency currency) {
         this.accountNumber = accountNumber;
         this.ownerName = ownerName;
-        this.pinCode = pinCode;
+        this.pinHash = pinHash;
         this.balance = balance;
         this.currency = currency;
     }
@@ -46,8 +54,19 @@ public class AccountEntity {
     public String getOwnerName() { return ownerName; }
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
 
-    public String getPinCode() { return pinCode; }
-    public void setPinCode(String pinCode) { this.pinCode = pinCode; }
+    @JsonIgnore
+    public String getPinHash() { return pinHash; }
+    public void setPinHash(String pinHash) { this.pinHash = pinHash; }
+
+    @JsonIgnore
+    public int getFailedPinAttempts() {
+        return failedPinAttempts == null ? 0 : failedPinAttempts;
+    }
+    public void setFailedPinAttempts(int failedPinAttempts) { this.failedPinAttempts = failedPinAttempts; }
+
+    @JsonIgnore
+    public Instant getPinLockedUntil() { return pinLockedUntil; }
+    public void setPinLockedUntil(Instant pinLockedUntil) { this.pinLockedUntil = pinLockedUntil; }
 
     public BigDecimal getBalance() { return balance; }
     public void setBalance(BigDecimal balance) { this.balance = balance; }
